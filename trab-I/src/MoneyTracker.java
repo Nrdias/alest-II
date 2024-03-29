@@ -14,6 +14,7 @@ public class MoneyTracker {
         int x;
         int y;
         char content;
+        Pointer next;
 
         public Pointer(int x, int y, char content) {
             this.x = x;
@@ -35,7 +36,8 @@ public class MoneyTracker {
     public static void main(String[] args) {
         List<Pointer> pointers = new ArrayList<>();
         String path = "src/files/casoG50.txt";
-        List<String> navigation = new ArrayList<>();
+        List<Pointer> navigation = new ArrayList<>();
+        Pointer previousPointer = null;
         try {
             List<String> lines = Files.readAllLines(Paths.get(path));
             for (int i = 0; i < lines.size(); i++) {
@@ -48,104 +50,189 @@ public class MoneyTracker {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        for (int i = 0; i < pointers.size(); i++) {
+            Pointer pointer = pointers.get(i);
+            if (previousPointer != null) {
+                previousPointer.next = pointer;
+            }
+            previousPointer = pointer;
+        }
+
+
         System.out.println(pointers);
         Pointer start = findStart(pointers);
-        navigation.add(start.toString());
-        System.out.println(navigation);
-
         Pointer current = start;
+        Pointer next = current.next;
         Pointer previous = start;
-        int directionX = 1; // 1 = right, -1 = left
-        int directionY = 0; // -1 = down, 1 = up
+        navigation.add(current);
+        int directionX = 1;
+        int directionY = 0;
 
         while (current.content != BANDITS_CAPTURED) {
-            if (current == start) {
+            System.out.println(current);
+            if (current.content == HORIZONTAL) {
+                if (next.content == VERTICAL) {
+                    current = next.next;
+                    continue;
+                }
+                if (previous.content == HORIZONTAL || previous.content == LEFT || previous.content == RIGHT || Character.isDigit(previous.content)) {
+                    if (directionX == 1) {
+                        for (Pointer pointer : pointers) {
+                            if (pointer.x == current.x && pointer.y == current.y + 1) {
+                                previous = current;
+                                current = pointer;
+                                previous.next = current;
+                                navigation.add(current);
+                                break;
+                            }
+                        }
+                    }
+                    if (directionX == -1) {
+                        for (Pointer pointer : pointers) {
+                            if (pointer.x == current.x && pointer.y == current.y - 1) {
+                                previous = current;
+                                current = pointer;
+                                previous.next = current;
+                                navigation.add(current);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+            if (current.content == VERTICAL) {
+                if (next.content == HORIZONTAL) {
+                    current = next.next;
+                    continue;
+                }
+                if (previous.content == VERTICAL || previous.content == LEFT || previous.content == RIGHT || Character.isDigit(previous.content)) {
+                    if (directionY == 1) {
+                        for (Pointer pointer : pointers) {
+                            if (pointer.x == current.x + 1 && pointer.y == current.y) {
+                                previous = current;
+                                current = pointer;
+                                previous.next = current;
+                                navigation.add(current);
+                                break;
+                            }
+                        }
+                    }
+                    if (directionY == -1) {
+                        for (Pointer pointer : pointers) {
+                            if (pointer.x == current.x - 1 && pointer.y == current.y) {
+                                previous = current;
+                                current = pointer;
+                                previous.next = current;
+                                navigation.add(current);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            if (current.content == LEFT) {
                 if (directionX == 1) {
-                    previous = current;
-                    current = pointers.stream().filter(p -> p.x == start.x && p.y == start.y + 1).findFirst().get();
+                    directionX = 0;
+                    directionY = 1;
+                } else if (directionX == -1) {
+                    directionX = 0;
+                    directionY = -1;
+                } else if (directionY == 1) {
+                    directionX = 1;
+                    directionY = 0;
+                } else if (directionY == -1) {
+                    directionX = -1;
+                    directionY = 0;
+                }
+                for (Pointer pointer : pointers) {
+                    if (pointer.x == current.x + directionX && pointer.y == current.y + directionY) {
+                        previous = current;
+                        current = pointer;
+                        previous.next = current;
+                        navigation.add(current);
+                        break;
+                    }
+                }
+            }
+            if (current.content == RIGHT) {
+                if (directionX == 1) {
+                    directionX = 0;
+                    directionY = -1;
+                } else if (directionX == -1) {
+                    directionX = 0;
+                    directionY = 1;
+                } else if (directionY == 1) {
+                    directionX = -1;
+                    directionY = 0;
+                } else if (directionY == -1) {
+                    directionX = 1;
+                    directionY = 0;
+                }
+                for (Pointer pointer : pointers) {
+                    if (pointer.x == current.x + directionX && pointer.y == current.y + directionY) {
+                        previous = current;
+                        current = pointer;
+                        previous.next = current;
+                        navigation.add(current);
+                        break;
+                    }
+                }
+            }
+            if (Character.isDigit(current.content)) {
+                if (directionX == 1) {
+                    for (Pointer pointer : pointers) {
+                        if (pointer.x == current.x && pointer.y == current.y + 1) {
+                            previous = current;
+                            current = pointer;
+                            previous.next = current;
+                            navigation.add(current);
+                            break;
+                        }
+                    }
                 }
                 if (directionX == -1) {
-                    previous = current;
-                    current = pointers.stream().filter(p -> p.x == start.x && p.y == start.y - 1).findFirst().get();
+                    for (Pointer pointer : pointers) {
+                        if (pointer.x == current.x && pointer.y == current.y - 1) {
+                            previous = current;
+                            current = pointer;
+                            previous.next = current;
+                            navigation.add(current);
+                            break;
+                        }
+                    }
                 }
                 if (directionY == 1) {
-                    previous = current;
-                    current = pointers.stream().filter(p -> p.x == start.x + 1 && p.y == start.y).findFirst().get();
+                    for (Pointer pointer : pointers) {
+                        if (pointer.x == current.x + 1 && pointer.y == current.y) {
+                            previous = current;
+                            current = pointer;
+                            previous.next = current;
+                            navigation.add(current);
+                            break;
+                        }
+                    }
                 }
                 if (directionY == -1) {
-                    previous = current;
-                    current = pointers.stream().filter(p -> p.x == start.x - 1 && p.y == start.y).findFirst().get();
+                    for (Pointer pointer : pointers) {
+                        if (pointer.x == current.x - 1 && pointer.y == current.y) {
+                            previous = current;
+                            current = pointer;
+                            previous.next = current;
+                            navigation.add(current);
+                            break;
+                        }
+                    }
                 }
             }
-
-            if (directionX == 1 && current.content == LEFT) {
-                directionX = 0;
-                directionY = 1;
-            }
-            if (directionX == 1 && current.content == RIGHT) {
-                directionX = 0;
-                directionY = -1;
-            }
-            if (directionX == -1 && current.content == LEFT) {
-                directionX = 0;
-                directionY = -1;
-            }
-            if (directionX == -1 && current.content == RIGHT) {
-                directionX = 0;
-                directionY = 1;
-            }
-            if (directionY == 1 && current.content == LEFT) {
-                directionX = 1;
-                directionY = 0;
-            }
-            if (directionY == 1 && current.content == RIGHT) {
-                directionX = -1;
-                directionY = 0;
-            }
-            if (directionY == -1 && current.content == LEFT) {
-                directionX = -1;
-                directionY = 0;
-            }
-            if (directionY == -1 && current.content == RIGHT) {
-                directionX = 1;
-                directionY = 0;
-            }
-
-            if (directionX == 1) {
-                int x = current.x;
-                int y = current.y;
-                previous = current;
-                current = pointers.stream().filter(p -> p.x == x && p.y == y + 1).findFirst().get();
-            }
-            if (directionX == -1) {
-                int x = current.x;
-                int y = current.y;
-                previous = current;
-                current = pointers.stream().filter(p -> p.x == x && p.y == y - 1).findFirst().get();
-            }
-            if (directionY == 1) {
-                int x = current.x;
-                int y = current.y;
-                previous = current;
-                current = pointers.stream().filter(p -> p.x == x + 1 && p.y == y).findFirst().get();
-            }
-            if (directionY == -1) {
-                int x = current.x;
-                int y = current.y;
-                previous = current;
-                current = pointers.stream().filter(p -> p.x == x - 1 && p.y == y).findFirst().get();
-            }
-
         }
-
-        System.out.println(navigation);
     }
 
-
-    public static Pointer findStart(List<Pointer> pointers) {
-        for (Pointer pointer : pointers) {
-            if (pointer.y == 0 && pointer.content == '-') return pointer;
-        }
-        return null;
+public static Pointer findStart(List<Pointer> pointers) {
+    for (Pointer pointer : pointers) {
+        if (pointer.y == 0 && pointer.content == '-') return pointer;
     }
+    return null;
+}
 }
